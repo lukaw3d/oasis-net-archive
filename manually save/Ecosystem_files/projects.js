@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     function checkUrlAndOpenModal() {
       // Get the project name from the URL hash (remove the '#' symbol)
-      const projectFromUrl = window.location.hash.slice(1).replace(/-/g, " "); // Remove '#' and replace dashes with spaces
+      const projectFromUrl = window.location.hash.slice(1); // Remove '#'
       if (projectFromUrl) {
         const project = allProjects.find(
           (p) => p.slug.toLowerCase() === projectFromUrl.toLowerCase()
@@ -621,7 +621,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       history.pushState(
         null,
         null,
-        `#${project.slug.toLowerCase().replace(/\s+/g, "-")}`
+        `#${project.slug}`
       );
       // Show the popup modal
       popupSection.classList.add("active");
