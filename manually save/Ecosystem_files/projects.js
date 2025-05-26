@@ -1,3 +1,10 @@
+import {unified} from 'https://esm.sh/unified@11?bundle';
+import remarkParse from 'https://esm.sh/remark-parse@11?bundle';
+import remarkRehype from 'https://esm.sh/remark-rehype@11?bundle';
+import rehypeSanitize from 'https://esm.sh/rehype-sanitize@6?bundle';
+import rehypeStringify from 'https://esm.sh/rehype-stringify@10?bundle';
+import rehypeExternalLinks from 'https://esm.sh/rehype-external-links@3?bundle';
+
 document.addEventListener("DOMContentLoaded", async () => {
   const apiUrl = "https://playground.oasis.io/projects.json";
   const itemsPerPage = 6;
@@ -39,57 +46,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     checkUrlAndOpenModal();
 
     function sanitizeDescription(description) {
-      // Replace **bold text** with <span class="bold">bold text</span>
-      description = description.replace(
-        /\*\*(.*?)\*\*/g,
-        '<span class="bold">$1</span>'
+      const html = String(
+        unified()
+          .use(remarkParse)
+          .use(remarkRehype)
+          .use(rehypeSanitize)
+          .use(rehypeExternalLinks, { target: '_blank', properties: { class: 'description-link' } })
+          .use(rehypeStringify)
+          .processSync(description)
       );
-
-      // Replace [link text](url) with <a href="url" target="_blank" class="description-link">link text</a>
-      description = description.replace(
-        /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
-        (match, text, url) => {
-          return `<a href="${url}" target="_blank" class="description-link">${text}</a>`;
-        }
-      );
-
-      // Replace ####Header with <h5>Header</h5> for fourth-level headers
-      description = description.replace(
-        /^####\s*(.*?)$/gm,
-        '<h5 class="modal-text-heading">$1</h5>'
-      ); // Match #### at the start of the line
-
-      // Replace ###Header with <h3>Header</h3> for third-level headers
-      description = description.replace(
-        /^###\s*(.*?)$/gm,
-        '<h6 class="modal-text-heading">$1</h6>'
-      ); // Match ### at the start of the line
-
-      // Replace ##Header with <h2>Header</h2> for second-level headers
-      description = description.replace(
-        /^##\s*(.*?)$/gm,
-        '<h4 class="modal-text-heading">$1</h4>'
-      ); // Match ## at the start of the line
-
-      // Replace #Header with <h1>Header</h1> for first-level headers
-      description = description.replace(
-        /^#\s*(.*?)$/gm,
-        '<h3 class="modal-text-heading">$1</h3>'
-      ); // Match # at the start of the line
-
-      // Replace - at the beginning of a line with <li> for list items
-      description = description.replace(
-        /^\s*-\s*(.*)$/gm,
-        "<ul><li>$1</li></ul>"
-      );
-
-      // Ensure all list items are wrapped in a single <ul> for proper grouping
-      description = description.replace(
-        /(<ul><li>.*<\/li><\/ul>)/g,
-        "<ul>$1</ul>"
-      );
-
-      return description;
+      return html;
     }
 
     // Extract unique values for filters
