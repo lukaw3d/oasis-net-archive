@@ -17,67 +17,98 @@ document.addEventListener("DOMContentLoaded", async () => {
     allProjects.sort((a, b) => a.name.localeCompare(b.name));
     filteredProjects = [...allProjects];
 
-function checkUrlAndOpenModal() {
-  // Get the project name from the URL hash (remove the '#' symbol)
-  const projectFromUrl = window.location.hash.slice(1).replace(/-/g, ' '); // Remove '#' and replace dashes with spaces
-  if (projectFromUrl) {
-    const project = allProjects.find(p => p.slug.toLowerCase() === projectFromUrl.toLowerCase());
-    if (project) {
-			      // Scroll to the section of the project (if the section exists)
-      const sectionId = projectFromUrl.toLowerCase().replace(/\s+/g, '-'); // Convert project name to section ID format
-      const section = document.getElementById('developer-demos');
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth' }); // Scroll smoothly to the section
+    function checkUrlAndOpenModal() {
+      // Get the project name from the URL hash (remove the '#' symbol)
+      const projectFromUrl = window.location.hash.slice(1).replace(/-/g, " "); // Remove '#' and replace dashes with spaces
+      if (projectFromUrl) {
+        const project = allProjects.find(
+          (p) => p.slug.toLowerCase() === projectFromUrl.toLowerCase()
+        );
+        if (project) {
+          // Scroll to the section of the project (if the section exists)
+          const sectionId = projectFromUrl.toLowerCase().replace(/\s+/g, "-"); // Convert project name to section ID format
+          const section = document.getElementById("developer-demos");
+          if (section) {
+            section.scrollIntoView({ behavior: "smooth" }); // Scroll smoothly to the section
+          }
+          openPopup(project); // Open the modal for the project found in the URL
+        } else {
+          console.log("Project not found in the URL hash.");
+        }
       }
-      openPopup(project); // Open the modal for the project found in the URL
-    } else {
-      console.log("Project not found in the URL hash.");
     }
-  }
-}
-checkUrlAndOpenModal()
+    checkUrlAndOpenModal();
 
+    function sanitizeDescription(description) {
+      // Replace **bold text** with <span class="bold">bold text</span>
+      description = description.replace(
+        /\*\*(.*?)\*\*/g,
+        '<span class="bold">$1</span>'
+      );
 
-function sanitizeDescription(description) {
-  // Replace **bold text** with <span class="bold">bold text</span>
-  description = description.replace(/\*\*(.*?)\*\*/g, '<span class="bold">$1</span>');
+      // Replace [link text](url) with <a href="url" target="_blank" class="description-link">link text</a>
+      description = description.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
+        (match, text, url) => {
+          return `<a href="${url}" target="_blank" class="description-link">${text}</a>`;
+        }
+      );
 
-  // Replace [link text](url) with <a href="url" target="_blank" class="description-link">link text</a>
-  description = description.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, (match, text, url) => {
-    return `<a href="${url}" target="_blank" class="description-link">${text}</a>`;
-  });
+      // Replace ####Header with <h5>Header</h5> for fourth-level headers
+      description = description.replace(
+        /^####\s*(.*?)$/gm,
+        '<h5 class="modal-text-heading">$1</h5>'
+      ); // Match #### at the start of the line
 
-  // Replace ####Header with <h5>Header</h5> for fourth-level headers
-  description = description.replace(/^####\s*(.*?)$/gm, '<h5 class="modal-text-heading">$1</h5>'); // Match #### at the start of the line
+      // Replace ###Header with <h3>Header</h3> for third-level headers
+      description = description.replace(
+        /^###\s*(.*?)$/gm,
+        '<h6 class="modal-text-heading">$1</h6>'
+      ); // Match ### at the start of the line
 
-  // Replace ###Header with <h3>Header</h3> for third-level headers
-  description = description.replace(/^###\s*(.*?)$/gm, '<h6 class="modal-text-heading">$1</h6>'); // Match ### at the start of the line
+      // Replace ##Header with <h2>Header</h2> for second-level headers
+      description = description.replace(
+        /^##\s*(.*?)$/gm,
+        '<h4 class="modal-text-heading">$1</h4>'
+      ); // Match ## at the start of the line
 
-  // Replace ##Header with <h2>Header</h2> for second-level headers
-  description = description.replace(/^##\s*(.*?)$/gm, '<h4 class="modal-text-heading">$1</h4>'); // Match ## at the start of the line
+      // Replace #Header with <h1>Header</h1> for first-level headers
+      description = description.replace(
+        /^#\s*(.*?)$/gm,
+        '<h3 class="modal-text-heading">$1</h3>'
+      ); // Match # at the start of the line
 
-  // Replace #Header with <h1>Header</h1> for first-level headers
-  description = description.replace(/^#\s*(.*?)$/gm, '<h3 class="modal-text-heading">$1</h3>'); // Match # at the start of the line
+      // Replace - at the beginning of a line with <li> for list items
+      description = description.replace(
+        /^\s*-\s*(.*)$/gm,
+        "<ul><li>$1</li></ul>"
+      );
 
-  // Replace - at the beginning of a line with <li> for list items
-  description = description.replace(/^\s*-\s*(.*)$/gm, '<ul><li>$1</li></ul>');
+      // Ensure all list items are wrapped in a single <ul> for proper grouping
+      description = description.replace(
+        /(<ul><li>.*<\/li><\/ul>)/g,
+        "<ul>$1</ul>"
+      );
 
-  // Ensure all list items are wrapped in a single <ul> for proper grouping
-  description = description.replace(/(<ul><li>.*<\/li><\/ul>)/g, '<ul>$1</ul>');
-
-  return description;
-}
-
+      return description;
+    }
 
     // Extract unique values for filters
-    const allLanguages = [...new Set(allProjects.flatMap(project => project.languages || []))];
-    const allParatimes = [...new Set(allProjects.flatMap(project => project.paratimes || []))];
-    const allLicenses = [...new Set(allProjects.flatMap(project => project.license || []))];
+    const allLanguages = [
+      ...new Set(allProjects.flatMap((project) => project.languages || [])),
+    ];
+    const allParatimes = [
+      ...new Set(allProjects.flatMap((project) => project.paratimes || [])),
+    ];
+    const allLicenses = [
+      ...new Set(allProjects.flatMap((project) => project.license || [])),
+    ];
 
     // Create checkboxes for each language if the container exists
-    const languageFiltersContainer = document.getElementById("language-filters");
+    const languageFiltersContainer =
+      document.getElementById("language-filters");
     if (languageFiltersContainer) {
-      allLanguages.forEach(language => {
+      allLanguages.forEach((language) => {
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -94,9 +125,10 @@ function sanitizeDescription(description) {
     }
 
     // Create checkboxes for each paratime if the container exists
-    const paratimeFiltersContainer = document.getElementById("paratime-filters");
+    const paratimeFiltersContainer =
+      document.getElementById("paratime-filters");
     if (paratimeFiltersContainer) {
-      allParatimes.forEach(paratime => {
+      allParatimes.forEach((paratime) => {
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -115,7 +147,7 @@ function sanitizeDescription(description) {
     // Create checkboxes for each license if the container exists
     const licenseFiltersContainer = document.getElementById("license-filters");
     if (licenseFiltersContainer) {
-      allLicenses.forEach(license => {
+      allLicenses.forEach((license) => {
         const label = document.createElement("label");
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -132,7 +164,8 @@ function sanitizeDescription(description) {
     }
 
     // Create checkbox for 'Maintained by Oasis' if the container exists
-    const maintainedFiltersContainer = document.getElementById("maintained-filters");
+    const maintainedFiltersContainer =
+      document.getElementById("maintained-filters");
     if (maintainedFiltersContainer) {
       const maintainedCheckbox = document.createElement("input");
       maintainedCheckbox.type = "checkbox";
@@ -142,7 +175,10 @@ function sanitizeDescription(description) {
       label.appendChild(document.createTextNode(" Oasis"));
       maintainedFiltersContainer.appendChild(label);
 
-      maintainedCheckbox.addEventListener("change", updateMaintainedByOasisFilter);
+      maintainedCheckbox.addEventListener(
+        "change",
+        updateMaintainedByOasisFilter
+      );
     } else {
       console.error("Maintained filters container not found");
     }
@@ -169,16 +205,40 @@ function sanitizeDescription(description) {
     };
 
     function sanitizeDescription(description) {
-      description = description.replace(/\*\*(.*?)\*\*/g, '<span class="bold">$1</span>');
-      description = description.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, (match, text, url) => {
-        return `<a href="${url}" target="_blank" class="description-link">${text}</a>`;
-      });
-      description = description.replace(/^####\s*(.*?)$/gm, '<h5 class="modal-text-heading">$1</h5>');
-      description = description.replace(/^###\s*(.*?)$/gm, '<h6 class="modal-text-heading">$1</h6>');
-      description = description.replace(/^##\s*(.*?)$/gm, '<h4 class="modal-text-heading">$1</h4>');
-      description = description.replace(/^#\s*(.*?)$/gm, '<h3 class="modal-text-heading">$1</h3>');
-      description = description.replace(/^\s*-\s*(.*)$/gm, '<ul><li>$1</li></ul>');
-      description = description.replace(/(<ul><li>.*<\/li><\/ul>)/g, '<ul>$1</ul>');
+      description = description.replace(
+        /\*\*(.*?)\*\*/g,
+        '<span class="bold">$1</span>'
+      );
+      description = description.replace(
+        /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
+        (match, text, url) => {
+          return `<a href="${url}" target="_blank" class="description-link">${text}</a>`;
+        }
+      );
+      description = description.replace(
+        /^####\s*(.*?)$/gm,
+        '<h5 class="modal-text-heading">$1</h5>'
+      );
+      description = description.replace(
+        /^###\s*(.*?)$/gm,
+        '<h6 class="modal-text-heading">$1</h6>'
+      );
+      description = description.replace(
+        /^##\s*(.*?)$/gm,
+        '<h4 class="modal-text-heading">$1</h4>'
+      );
+      description = description.replace(
+        /^#\s*(.*?)$/gm,
+        '<h3 class="modal-text-heading">$1</h3>'
+      );
+      description = description.replace(
+        /^\s*-\s*(.*)$/gm,
+        "<ul><li>$1</li></ul>"
+      );
+      description = description.replace(
+        /(<ul><li>.*<\/li><\/ul>)/g,
+        "<ul>$1</ul>"
+      );
       return description;
     }
 
@@ -197,35 +257,57 @@ function sanitizeDescription(description) {
     function updateFilteredProjects() {
       const searchTerm = searchBar.value.toLowerCase();
       filteredProjects = allProjects.filter((project) => {
-        const matchesSearchTerm = (
+        const matchesSearchTerm =
           (project.name && project.name.toLowerCase().includes(searchTerm)) ||
-          (project.description && project.description.toLowerCase().includes(searchTerm)) ||
-          (project.tags && project.tags.some((tag) => tag && tag.toLowerCase().includes(searchTerm))) ||
-          (project.languages && project.languages.some((language) => language && language.toLowerCase().includes(searchTerm))) ||
-          (project.paratimes && project.paratimes.some((paratime) => paratime && paratime.toLowerCase().includes(searchTerm))) ||
-          (project.authors && project.authors.some((author) => {
-            const authorName = Object.keys(author)[0];
-            const authorUrl = author[authorName];
-            return (authorName && authorName.toLowerCase().includes(searchTerm)) ||
-                   (authorUrl && authorUrl.toLowerCase().includes(searchTerm));
-          }))
-        );
+          (project.description &&
+            project.description.toLowerCase().includes(searchTerm)) ||
+          (project.tags &&
+            project.tags.some(
+              (tag) => tag && tag.toLowerCase().includes(searchTerm)
+            )) ||
+          (project.languages &&
+            project.languages.some(
+              (language) =>
+                language && language.toLowerCase().includes(searchTerm)
+            )) ||
+          (project.paratimes &&
+            project.paratimes.some(
+              (paratime) =>
+                paratime && paratime.toLowerCase().includes(searchTerm)
+            )) ||
+          (project.authors &&
+            project.authors.some((author) => {
+              const authorName = Object.keys(author)[0];
+              const authorUrl = author[authorName];
+              return (
+                (authorName && authorName.toLowerCase().includes(searchTerm)) ||
+                (authorUrl && authorUrl.toLowerCase().includes(searchTerm))
+              );
+            }));
 
-        const matchesSelectedLanguages = selectedLanguages.every(language =>
+        const matchesSelectedLanguages = selectedLanguages.every((language) =>
           project.languages?.includes(language)
         );
 
-        const matchesSelectedParatimes = selectedParatimes.every(paratime =>
+        const matchesSelectedParatimes = selectedParatimes.every((paratime) =>
           project.paratimes?.includes(paratime)
         );
 
-        const matchesSelectedLicenses = selectedLicenses.every(license =>
+        const matchesSelectedLicenses = selectedLicenses.every((license) =>
           project.license?.includes(license)
         );
 
-        const matchesMaintainedByOasis = isMaintainedByOasis ? project.maintainedByOasis === true : true;
+        const matchesMaintainedByOasis = isMaintainedByOasis
+          ? project.maintainedByOasis === true
+          : true;
 
-        return matchesSearchTerm && matchesSelectedLanguages && matchesSelectedParatimes && matchesSelectedLicenses && matchesMaintainedByOasis;
+        return (
+          matchesSearchTerm &&
+          matchesSelectedLanguages &&
+          matchesSelectedParatimes &&
+          matchesSelectedLicenses &&
+          matchesMaintainedByOasis
+        );
       });
 
       // Apply the selected sorting after filtering
@@ -242,10 +324,14 @@ function sanitizeDescription(description) {
     function sortProjects(sortBy) {
       switch (sortBy) {
         case "created":
-          filteredProjects.sort((a, b) => new Date(a.created) - new Date(b.created));
+          filteredProjects.sort(
+            (a, b) => new Date(a.created) - new Date(b.created)
+          );
           break;
         case "lastUpdated":
-          filteredProjects.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+          filteredProjects.sort(
+            (a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated)
+          );
           break;
         default:
           filteredProjects.sort((a, b) => a.name.localeCompare(b.name)); // Default to sorting by name
@@ -276,16 +362,20 @@ function sanitizeDescription(description) {
 
         const description = document.createElement("p");
         description.className = "project-description";
-        description.textContent = project.description?.slice(0, 100) + (project.description?.length > 100 ? "..." : "");
+        description.textContent =
+          project.description?.slice(0, 100) +
+          (project.description?.length > 100 ? "..." : "");
 
         const screenshot = document.createElement("img");
         screenshot.className = "project-screenshot thumbnail";
-        screenshot.src = 'https://playground.oasis.io' + project.screenshots[0];
+        screenshot.src = "https://playground.oasis.io" + project.screenshots[0];
         screenshot.alt = project.name;
 
         const languages = document.createElement("p");
         languages.className = `languages-tags`;
-        languages.textContent = `Languages: ${project.languages?.join(", ") || "N/A"}`;
+        languages.textContent = `Languages: ${
+          project.languages?.join(", ") || "N/A"
+        }`;
 
         const tags = document.createElement("p");
         tags.className = `project-tags`;
@@ -293,16 +383,23 @@ function sanitizeDescription(description) {
 
         const paratimes = document.createElement("p");
         paratimes.className = "project-paratimes";
-        const formattedParatimes = `Paratimes: ${project.paratimes?.map(paratime => paratime.charAt(0).toUpperCase() + paratime.slice(1)).join(", ") || "N/A"}`;
+        const formattedParatimes = `Paratimes: ${
+          project.paratimes
+            ?.map(
+              (paratime) => paratime.charAt(0).toUpperCase() + paratime.slice(1)
+            )
+            .join(", ") || "N/A"
+        }`;
         paratimes.textContent = formattedParatimes;
 
         const maintainedByOasis = document.createElement("img");
-        maintainedByOasis.className = 'maintained-by-oasis';
-        maintainedByOasis.src = 'https://cdn.prod.website-files.com/6600cac2bfd894b77d543d34/678eb1569c6375eb0bc8c4c8_maintainedByOasisIconn.svg';
-        maintainedByOasis.alt = 'maintainedByOasis';
+        maintainedByOasis.className = "maintained-by-oasis";
+        maintainedByOasis.src =
+          "https://cdn.prod.website-files.com/6600cac2bfd894b77d543d34/678eb1569c6375eb0bc8c4c8_maintainedByOasisIconn.svg";
+        maintainedByOasis.alt = "maintainedByOasis";
 
         const bg = document.createElement("div");
-        bg.className = 'playground-item-bg';
+        bg.className = "playground-item-bg";
 
         item.appendChild(screenshot);
         item.appendChild(name);
@@ -310,7 +407,7 @@ function sanitizeDescription(description) {
         item.appendChild(languages);
         item.appendChild(tags);
         item.appendChild(paratimes);
-        if(project.maintainedByOasis){
+        if (project.maintainedByOasis) {
           item.appendChild(maintainedByOasis);
         }
         itemWrapper.appendChild(item);
@@ -358,17 +455,24 @@ function sanitizeDescription(description) {
       clearIcon.style.display = "none"; // Hide the clear icon
 
       filteredProjects = allProjects.filter((project) => {
-        const matchesSelectedLanguages = selectedLanguages.every(language =>
+        const matchesSelectedLanguages = selectedLanguages.every((language) =>
           project.languages?.includes(language)
         );
-        const matchesSelectedParatimes = selectedParatimes.every(paratime =>
+        const matchesSelectedParatimes = selectedParatimes.every((paratime) =>
           project.paratimes?.includes(paratime)
         );
-        const matchesSelectedLicenses = selectedLicenses.every(license =>
+        const matchesSelectedLicenses = selectedLicenses.every((license) =>
           project.license?.includes(license)
         );
-        const matchesMaintainedByOasis = isMaintainedByOasis ? project.maintainedByOasis === true : true;
-        return matchesSelectedLanguages && matchesSelectedParatimes && matchesSelectedLicenses && matchesMaintainedByOasis;
+        const matchesMaintainedByOasis = isMaintainedByOasis
+          ? project.maintainedByOasis === true
+          : true;
+        return (
+          matchesSelectedLanguages &&
+          matchesSelectedParatimes &&
+          matchesSelectedLicenses &&
+          matchesMaintainedByOasis
+        );
       });
 
       renderProjects(filteredProjects, currentPage);
@@ -385,22 +489,29 @@ function sanitizeDescription(description) {
 
     // Define filter update functions
     function updateLanguageFilter() {
-      selectedLanguages = Array.from(document.querySelectorAll('.language-filter:checked')).map(checkbox => checkbox.value);
+      selectedLanguages = Array.from(
+        document.querySelectorAll(".language-filter:checked")
+      ).map((checkbox) => checkbox.value);
       updateFilteredProjects();
     }
 
     function updateParatimeFilter() {
-      selectedParatimes = Array.from(document.querySelectorAll('.paratime-filter:checked')).map(checkbox => checkbox.value);
+      selectedParatimes = Array.from(
+        document.querySelectorAll(".paratime-filter:checked")
+      ).map((checkbox) => checkbox.value);
       updateFilteredProjects();
     }
 
     function updateLicenseFilter() {
-      selectedLicenses = Array.from(document.querySelectorAll('.license-filter:checked')).map(checkbox => checkbox.value);
+      selectedLicenses = Array.from(
+        document.querySelectorAll(".license-filter:checked")
+      ).map((checkbox) => checkbox.value);
       updateFilteredProjects();
     }
 
     function updateMaintainedByOasisFilter() {
-      isMaintainedByOasis = document.querySelector('.maintained-filter').checked;
+      isMaintainedByOasis =
+        document.querySelector(".maintained-filter").checked;
       updateFilteredProjects();
     }
 
@@ -413,7 +524,7 @@ function sanitizeDescription(description) {
     });
 
     const dropdownItems = dropdownMenu.querySelectorAll(".dropdown-item");
-    dropdownItems.forEach(item => {
+    dropdownItems.forEach((item) => {
       item.addEventListener("click", (e) => {
         const sortBy = e.target.getAttribute("data-value");
         dropdownButton.textContent = e.target.textContent; // Update button text to selected option
@@ -426,167 +537,208 @@ function sanitizeDescription(description) {
       });
     });
 
-	function openPopup(project) {
-  const popupSection = document.querySelector(".playground-popup-section");
-  const modal = document.querySelector(".playground-modal");
-  const modalFields = {
-    name: modal.querySelector(".heading-style-h3"),
-    screenshot: modal.querySelector(".playground_demo_screenshot"),
-    description: modal.querySelector(".modal_project_description"),
-    authors: modal.querySelector(".playground_modal_list .playground_right_list_item:nth-child(1) .text-span-113"),
-    github: modal.querySelector(".playground_modal_list .playground_right_list_item:nth-child(2) a"),
-    demo: modal.querySelector(".playground_modal_list .playground_right_list_item:nth-child(3) a"),
-    tutorial: modal.querySelector(".playground_modal_list .playground_right_list_item:nth-child(4) a"),
-    license: modal.querySelector(".playground_modal_list .playground_right_list_item:nth-child(5) .text-span-113"),
-    paratimes: modal.querySelector(".playground_cat_value_paratimes"),
-    languages: modal.querySelector(".playground_cat_value_languages"),
-    created: modal.querySelector(".playground_cat_value_created"),
-    lastUpdated: modal.querySelector(".playground_cat_value_updated"),
-    tagsWrapper: modal.querySelector(".playground_tags_wrapper")
-  };
+    function openPopup(project) {
+      const popupSection = document.querySelector(".playground-popup-section");
+      const modal = document.querySelector(".playground-modal");
+      const modalFields = {
+        name: modal.querySelector(".heading-style-h3"),
+        screenshot: modal.querySelector(".playground_demo_screenshot"),
+        description: modal.querySelector(".modal_project_description"),
+        authors: modal.querySelector(
+          ".playground_modal_list .playground_right_list_item:nth-child(1) .text-span-113"
+        ),
+        github: modal.querySelector(
+          ".playground_modal_list .playground_right_list_item:nth-child(2) a"
+        ),
+        demo: modal.querySelector(
+          ".playground_modal_list .playground_right_list_item:nth-child(3) a"
+        ),
+        tutorial: modal.querySelector(
+          ".playground_modal_list .playground_right_list_item:nth-child(4) a"
+        ),
+        license: modal.querySelector(
+          ".playground_modal_list .playground_right_list_item:nth-child(5) .text-span-113"
+        ),
+        paratimes: modal.querySelector(".playground_cat_value_paratimes"),
+        languages: modal.querySelector(".playground_cat_value_languages"),
+        created: modal.querySelector(".playground_cat_value_created"),
+        lastUpdated: modal.querySelector(".playground_cat_value_updated"),
+        tagsWrapper: modal.querySelector(".playground_tags_wrapper"),
+      };
 
-  modalFields.name.textContent = project.name;
-  modalFields.screenshot.src = 'https://playground.oasis.io' + project.screenshots[0];
-  modalFields.screenshot.alt = project.name;
+      modalFields.name.textContent = project.name;
+      modalFields.screenshot.src =
+        "https://playground.oasis.io" + project.screenshots[0];
+      modalFields.screenshot.alt = project.name;
 
-  // Sanitize and insert the project description
-  modalFields.description.innerHTML = sanitizeDescription(project.description || "No description available.");
+      // Sanitize and insert the project description
+      modalFields.description.innerHTML = sanitizeDescription(
+        project.description || "No description available."
+      );
 
-  // Populate Authors with links
-if (project.authors && project.authors.length > 0) {
-  const authorsHTML = project.authors.map(author => {
-    const authorName = Object.keys(author)[0];
-    const authorUrl = author[authorName];
-    return `<a href="${authorUrl}" target="_blank" class="author-link">${authorName}</a>`;
-  }).join(", ");
-  modalFields.authors.innerHTML = authorsHTML;
-}
+      // Populate Authors with links
+      if (project.authors && project.authors.length > 0) {
+        const authorsHTML = project.authors
+          .map((author) => {
+            const authorName = Object.keys(author)[0];
+            const authorUrl = author[authorName];
+            return `<a href="${authorUrl}" target="_blank" class="author-link">${authorName}</a>`;
+          })
+          .join(", ");
+        modalFields.authors.innerHTML = authorsHTML;
+      }
 
-// GitHub Link: Check if project.github exists
-if (project.codeUrl) {
-  modalFields.github.href = project.codeUrl;  // Set the GitHub URL
-  modalFields.github.textContent = "Link to GitHub";  // Set the link text
-  modalFields.github.setAttribute("target", "_blank");  // Ensure it opens in a new tab
-  modalFields.github.style.display = "inline";  // Show the GitHub link if available
-} else {
-   document.querySelector(".playground_modal_code").style.display = "none";
-}
+      // GitHub Link: Check if project.github exists
+      if (project.codeUrl) {
+        modalFields.github.href = project.codeUrl; // Set the GitHub URL
+        modalFields.github.textContent = "Link to GitHub"; // Set the link text
+        modalFields.github.setAttribute("target", "_blank"); // Ensure it opens in a new tab
+        modalFields.github.style.display = "inline"; // Show the GitHub link if available
+      } else {
+        document.querySelector(".playground_modal_code").style.display = "none";
+      }
 
-// Demo Link: Check if project.demoUrl exists
-if (project.demoUrl) {
-  modalFields.demo.href = project.demoUrl;  // Set the demo URL
-  modalFields.demo.textContent = "View Demo";  // Set the demo link text
-  modalFields.demo.setAttribute("target", "_blank");  // Ensure it opens in a new tab
-  modalFields.demo.style.display = "inline";  // Show the demo link if available
-} else {
-	 document.querySelector(".playground_modal_demo").style.display = "none";
-}
+      // Demo Link: Check if project.demoUrl exists
+      if (project.demoUrl) {
+        modalFields.demo.href = project.demoUrl; // Set the demo URL
+        modalFields.demo.textContent = "View Demo"; // Set the demo link text
+        modalFields.demo.setAttribute("target", "_blank"); // Ensure it opens in a new tab
+        modalFields.demo.style.display = "inline"; // Show the demo link if available
+      } else {
+        document.querySelector(".playground_modal_demo").style.display = "none";
+      }
 
+      if (modalFields.tutorial) {
+        modalFields.tutorial.href =
+          project.tutorials && project.tutorials[0]
+            ? project.tutorials[0][Object.keys(project.tutorials[0])[0]]
+            : "#";
+        modalFields.tutorial.textContent =
+          project.tutorials && project.tutorials[0] ? "Video Demo" : "N/A";
+        modalFields.tutorial.setAttribute("target", "_blank");
+      } else {
+        modalFields.tutorial.style.display = "none";
+      }
 
-if (modalFields.tutorial) {
-   modalFields.tutorial.href = project.tutorials && project.tutorials[0] ? project.tutorials[0][Object.keys(project.tutorials[0])[0]] : "#";
-  modalFields.tutorial.textContent = project.tutorials && project.tutorials[0] ? "Video Demo" : "N/A";
-  modalFields.tutorial.setAttribute("target", "_blank");
-} else {
-  modalFields.tutorial.style.display = "none";
-}
+      modalFields.license.textContent = project.license || "Unspecified";
 
-  modalFields.license.textContent = project.license || "Unspecified";
+      // Populate ParaTimes
+      modalFields.paratimes.textContent = project.paratimes
+        ? project.paratimes.join(", ")
+        : "N/A";
 
-  // Populate ParaTimes
-  modalFields.paratimes.textContent = project.paratimes ? project.paratimes.join(", ") : "N/A";
+      // Populate Languages
+      modalFields.languages.textContent = project.languages
+        ? project.languages.join(", ")
+        : "N/A";
 
-  // Populate Languages
-  modalFields.languages.textContent = project.languages ? project.languages.join(", ") : "N/A";
+      // Populate Created and Last Updated
+      modalFields.created.textContent = project.created
+        ? new Date(project.created).toLocaleDateString()
+        : "N/A";
+      modalFields.lastUpdated.textContent = project.lastUpdated
+        ? new Date(project.lastUpdated).toLocaleDateString()
+        : "N/A";
 
-  // Populate Created and Last Updated
-  modalFields.created.textContent = project.created ? new Date(project.created).toLocaleDateString() : "N/A";
-  modalFields.lastUpdated.textContent = project.lastUpdated ? new Date(project.lastUpdated).toLocaleDateString() : "N/A";
+      // Populate Tags
+      modalFields.tagsWrapper.innerHTML = ""; // Clear any existing tags
+      if (project.tags && project.tags.length > 0) {
+        project.tags.forEach((tag) => {
+          const tagElement = document.createElement("div");
+          tagElement.className = "playground_tag";
+          tagElement.innerHTML = `<div class="playground_cat_value playground_cat_value_tag">${tag}</div>`;
+          modalFields.tagsWrapper.appendChild(tagElement);
+        });
+      } else {
+        const tagElement = document.createElement("div");
+        tagElement.className = "playground_tag";
+        tagElement.innerHTML = `<div class="playground_cat_value playground_cat_value_tag">N/A</div>`;
+        modalFields.tagsWrapper.appendChild(tagElement);
+      }
 
-  // Populate Tags
-  modalFields.tagsWrapper.innerHTML = ''; // Clear any existing tags
-  if (project.tags && project.tags.length > 0) {
-    project.tags.forEach(tag => {
-      const tagElement = document.createElement("div");
-      tagElement.className = "playground_tag";
-      tagElement.innerHTML = `<div class="playground_cat_value playground_cat_value_tag">${tag}</div>`;
-      modalFields.tagsWrapper.appendChild(tagElement);
-    });
-  } else {
-    const tagElement = document.createElement("div");
-    tagElement.className = "playground_tag";
-    tagElement.innerHTML = `<div class="playground_cat_value playground_cat_value_tag">N/A</div>`;
-    modalFields.tagsWrapper.appendChild(tagElement);
-  }
+      // Process and insert the sanitized description into the modal's description field
+      modalFields.description.innerHTML = sanitizeDescription(
+        project.description || "No description available."
+      );
 
-
-    // Process and insert the sanitized description into the modal's description field
-    modalFields.description.innerHTML = sanitizeDescription(project.description || "No description available.");
-
-    // Add the project name to the URL
-    history.pushState(null, null, `#${project.slug.toLowerCase().replace(/\s+/g, '-')}`);
-  // Show the popup modal
-  popupSection.classList.add("active");
-}
-
- // Select the clear filters button
-  const clearFiltersButton = document.querySelector(".clear-filters-playground");
-
-
-  // Function to clear all filters and reset the search bar
-  clearFiltersButton.addEventListener("click", () => {
-    // Reset checkboxes for all filters
-    document.querySelectorAll('.language-filter').forEach(checkbox => checkbox.checked = false);
-    document.querySelectorAll('.paratime-filter').forEach(checkbox => checkbox.checked = false);
-    document.querySelectorAll('.license-filter').forEach(checkbox => checkbox.checked = false);
-    document.querySelector('.maintained-filter').checked = false; // Reset the 'Maintained by Oasis' filter
-
-    // Reset the search bar and hide the clear icon
-    searchBar.value = "";
-    clearIcon.style.display = "none";
-
-    // Reset filter state variables
-    selectedLanguages = [];
-    selectedParatimes = [];
-    selectedLicenses = [];
-    isMaintainedByOasis = false;
-
-    // Re-filter projects and re-render the list
-    updateFilteredProjects();  // This will update the project list based on the reset filters
-  });
-
-
-	function checkUrlAndOpenModal() {
-  const projectFromUrl = window.location.hash.slice(1).replace(/-/g, ' '); // Remove '#' and replace dashes with spaces
-  if (projectFromUrl) {
-    const project = allProjects.find(p => p.slug.toLowerCase() === projectFromUrl.toLowerCase());
-    if (project) {
-      openPopup(project); // Open the modal for the project found in the URL
+      // Add the project name to the URL
+      history.pushState(
+        null,
+        null,
+        `#${project.slug.toLowerCase().replace(/\s+/g, "-")}`
+      );
+      // Show the popup modal
+      popupSection.classList.add("active");
     }
-  }
-}
 
-if (closeModalButton) {
-  closeModalButton.addEventListener("click", () => {
-    const popupSection = document.querySelector(".playground-popup-section");
-    popupSection.classList.remove("active");
+    // Select the clear filters button
+    const clearFiltersButton = document.querySelector(
+      ".clear-filters-playground"
+    );
 
-    // Remove the project name from the URL
-    history.replaceState(null, null, window.location.pathname); // This will reset the URL to its original form without the hash
-  });
-}
+    // Function to clear all filters and reset the search bar
+    clearFiltersButton.addEventListener("click", () => {
+      // Reset checkboxes for all filters
+      document
+        .querySelectorAll(".language-filter")
+        .forEach((checkbox) => (checkbox.checked = false));
+      document
+        .querySelectorAll(".paratime-filter")
+        .forEach((checkbox) => (checkbox.checked = false));
+      document
+        .querySelectorAll(".license-filter")
+        .forEach((checkbox) => (checkbox.checked = false));
+      document.querySelector(".maintained-filter").checked = false; // Reset the 'Maintained by Oasis' filter
 
-popupSection.addEventListener("click", (e) => {
-  if (!modal.contains(e.target)) {
-    const popupSection = document.querySelector(".playground-popup-section");
-    popupSection.classList.remove("active");
+      // Reset the search bar and hide the clear icon
+      searchBar.value = "";
+      clearIcon.style.display = "none";
 
-    // Remove the project name from the URL when clicking outside the modal
-    history.replaceState(null, null, window.location.pathname); // Reset the URL to its original form
-  }
-});
+      // Reset filter state variables
+      selectedLanguages = [];
+      selectedParatimes = [];
+      selectedLicenses = [];
+      isMaintainedByOasis = false;
 
+      // Re-filter projects and re-render the list
+      updateFilteredProjects(); // This will update the project list based on the reset filters
+    });
 
+    function checkUrlAndOpenModal() {
+      const projectFromUrl = window.location.hash.slice(1).replace(/-/g, " "); // Remove '#' and replace dashes with spaces
+      if (projectFromUrl) {
+        const project = allProjects.find(
+          (p) => p.slug.toLowerCase() === projectFromUrl.toLowerCase()
+        );
+        if (project) {
+          openPopup(project); // Open the modal for the project found in the URL
+        }
+      }
+    }
+
+    if (closeModalButton) {
+      closeModalButton.addEventListener("click", () => {
+        const popupSection = document.querySelector(
+          ".playground-popup-section"
+        );
+        popupSection.classList.remove("active");
+
+        // Remove the project name from the URL
+        history.replaceState(null, null, window.location.pathname); // This will reset the URL to its original form without the hash
+      });
+    }
+
+    popupSection.addEventListener("click", (e) => {
+      if (!modal.contains(e.target)) {
+        const popupSection = document.querySelector(
+          ".playground-popup-section"
+        );
+        popupSection.classList.remove("active");
+
+        // Remove the project name from the URL when clicking outside the modal
+        history.replaceState(null, null, window.location.pathname); // Reset the URL to its original form
+      }
+    });
   } catch (error) {
     console.error("Error fetching or displaying data:", error);
   }
