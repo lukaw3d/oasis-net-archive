@@ -204,44 +204,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       description: modal.querySelector(".modal_project_description"),
     };
 
-    function sanitizeDescription(description) {
-      description = description.replace(
-        /\*\*(.*?)\*\*/g,
-        '<span class="bold">$1</span>'
-      );
-      description = description.replace(
-        /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g,
-        (match, text, url) => {
-          return `<a href="${url}" target="_blank" class="description-link">${text}</a>`;
-        }
-      );
-      description = description.replace(
-        /^####\s*(.*?)$/gm,
-        '<h5 class="modal-text-heading">$1</h5>'
-      );
-      description = description.replace(
-        /^###\s*(.*?)$/gm,
-        '<h6 class="modal-text-heading">$1</h6>'
-      );
-      description = description.replace(
-        /^##\s*(.*?)$/gm,
-        '<h4 class="modal-text-heading">$1</h4>'
-      );
-      description = description.replace(
-        /^#\s*(.*?)$/gm,
-        '<h3 class="modal-text-heading">$1</h3>'
-      );
-      description = description.replace(
-        /^\s*-\s*(.*)$/gm,
-        "<ul><li>$1</li></ul>"
-      );
-      description = description.replace(
-        /(<ul><li>.*<\/li><\/ul>)/g,
-        "<ul>$1</ul>"
-      );
-      return description;
-    }
-
     // Function to update the results count text
     function updateResultsCount() {
       if (filteredProjects.length === 0) {
@@ -656,11 +618,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         modalFields.tagsWrapper.appendChild(tagElement);
       }
 
-      // Process and insert the sanitized description into the modal's description field
-      modalFields.description.innerHTML = sanitizeDescription(
-        project.description || "No description available."
-      );
-
       // Add the project name to the URL
       history.pushState(
         null,
@@ -703,18 +660,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Re-filter projects and re-render the list
       updateFilteredProjects(); // This will update the project list based on the reset filters
     });
-
-    function checkUrlAndOpenModal() {
-      const projectFromUrl = window.location.hash.slice(1).replace(/-/g, " "); // Remove '#' and replace dashes with spaces
-      if (projectFromUrl) {
-        const project = allProjects.find(
-          (p) => p.slug.toLowerCase() === projectFromUrl.toLowerCase()
-        );
-        if (project) {
-          openPopup(project); // Open the modal for the project found in the URL
-        }
-      }
-    }
 
     if (closeModalButton) {
       closeModalButton.addEventListener("click", () => {
