@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     checkUrlAndOpenModal();
 
-    function sanitizeDescription(description) {
+    function markdownToHtml(description) {
       const html = String(
         unified()
           .use(remarkParse)
@@ -499,7 +499,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       modalFields.screenshot.alt = project.name;
 
       // Sanitize and insert the project description
-      modalFields.description.innerHTML = sanitizeDescription(
+      modalFields.description.innerHTML = markdownToHtml(
         project.description || "No description available."
       );
 
