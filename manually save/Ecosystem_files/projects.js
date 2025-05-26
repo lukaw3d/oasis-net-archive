@@ -25,8 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           (p) => p.slug.toLowerCase() === projectFromUrl.toLowerCase()
         );
         if (project) {
-          // Scroll to the section of the project (if the section exists)
-          const sectionId = projectFromUrl.toLowerCase().replace(/\s+/g, "-"); // Convert project name to section ID format
+          // Scroll to the section of projects
           const section = document.getElementById("developer-demos");
           if (section) {
             section.scrollIntoView({ behavior: "smooth" }); // Scroll smoothly to the section
