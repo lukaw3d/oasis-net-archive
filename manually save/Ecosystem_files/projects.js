@@ -1,10 +1,10 @@
 /// <reference path="./types.d.ts" />
-import {unified} from 'https://esm.sh/unified@11?bundle';
-import remarkParse from 'https://esm.sh/remark-parse@11?bundle';
-import remarkRehype from 'https://esm.sh/remark-rehype@11?bundle';
-import rehypeSanitize from 'https://esm.sh/rehype-sanitize@6?bundle';
-import rehypeStringify from 'https://esm.sh/rehype-stringify@10?bundle';
-import rehypeExternalLinks from 'https://esm.sh/rehype-external-links@3?bundle';
+import { unified } from "https://esm.sh/unified@11?bundle";
+import remarkParse from "https://esm.sh/remark-parse@11?bundle";
+import remarkRehype from "https://esm.sh/remark-rehype@11?bundle";
+import rehypeSanitize from "https://esm.sh/rehype-sanitize@6?bundle";
+import rehypeStringify from "https://esm.sh/rehype-stringify@10?bundle";
+import rehypeExternalLinks from "https://esm.sh/rehype-external-links@3?bundle";
 
 /** Blocks dangerous URLs that start with "javascript:". */
 function sanitizeUrl(url) {
@@ -66,7 +66,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           .use(remarkParse)
           .use(remarkRehype)
           .use(rehypeSanitize)
-          .use(rehypeExternalLinks, { target: '_blank', properties: { class: 'description-link' } })
+          .use(rehypeExternalLinks, {
+            target: "_blank",
+            properties: { class: "description-link" },
+          })
           .use(rehypeStringify)
           .processSync(description)
       );
@@ -520,17 +523,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Populate Authors with links
       if (project.authors && project.authors.length > 0) {
-        const authorsNodes = project.authors
-          .flatMap((author, i) => {
-            const authorName = Object.keys(author)[0];
-            const authorUrl = author[authorName];
-            const a = document.createElement('a');
-            a.target = '_blank';
-            a.className = 'author-link';
-            a.href = sanitizeUrl(authorUrl);
-            a.textContent = authorName;
-            return i > 0 ? [', ', a] : [a];
-          })
+        const authorsNodes = project.authors.flatMap((author, i) => {
+          const authorName = Object.keys(author)[0];
+          const authorUrl = author[authorName];
+          const a = document.createElement("a");
+          a.target = "_blank";
+          a.className = "author-link";
+          a.href = sanitizeUrl(authorUrl);
+          a.textContent = authorName;
+          return i > 0 ? [", ", a] : [a];
+        });
         modalFields.authors.replaceChildren(...authorsNodes);
       }
 
@@ -593,7 +595,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           const tagElement = document.createElement("div");
           tagElement.className = "playground_tag";
           tagElement.innerHTML = `<div class="playground_cat_value playground_cat_value_tag"></div>`;
-          tagElement.querySelector('.playground_cat_value').textContent = tag;
+          tagElement.querySelector(".playground_cat_value").textContent = tag;
           modalFields.tagsWrapper.appendChild(tagElement);
         });
       } else {
@@ -604,11 +606,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       // Add the project name to the URL
-      history.pushState(
-        null,
-        null,
-        `#${project.slug}`
-      );
+      history.pushState(null, null, `#${project.slug}`);
       // Show the popup modal
       popupSection.classList.add("active");
     }
