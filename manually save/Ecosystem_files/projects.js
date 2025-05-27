@@ -61,6 +61,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     checkUrlAndOpenModal();
 
     function markdownToHtml(description) {
+      // TODO: headings: decrease size + .modal-text-heading
+      // TODO: paragraphs: decrease size
       const html = String(
         unified()
           .use(remarkParse)
