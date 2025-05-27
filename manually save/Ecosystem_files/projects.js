@@ -567,6 +567,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           project.tutorials && project.tutorials[0] ? "Video Demo" : "N/A";
         modalFields.tutorial.setAttribute("target", "_blank");
       } else {
+        // TODO: ???
         modalFields.tutorial.style.display = "none";
       }
 
