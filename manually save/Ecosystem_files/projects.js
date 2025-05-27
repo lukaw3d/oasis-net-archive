@@ -506,14 +506,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Populate Authors with links
       if (project.authors && project.authors.length > 0) {
-        const authorsHTML = project.authors
-          .map((author) => {
+        const authorsNodes = project.authors
+          .flatMap((author, i) => {
             const authorName = Object.keys(author)[0];
             const authorUrl = author[authorName];
-            return `<a href="${authorUrl}" target="_blank" class="author-link">${authorName}</a>`;
+            const a = document.createElement('a');
+            a.target = '_blank';
+            a.className = 'author-link';
+            a.href = authorUrl;
+            a.textContent = authorName;
+            return i > 0 ? [', ', a] : [a];
           })
-          .join(", ");
-        modalFields.authors.innerHTML = authorsHTML;
+        modalFields.authors.replaceChildren(...authorsNodes);
       }
 
       // GitHub Link: Check if project.github exists
@@ -574,7 +578,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         project.tags.forEach((tag) => {
           const tagElement = document.createElement("div");
           tagElement.className = "playground_tag";
-          tagElement.innerHTML = `<div class="playground_cat_value playground_cat_value_tag">${tag}</div>`;
+          tagElement.innerHTML = `<div class="playground_cat_value playground_cat_value_tag"></div>`;
+          tagElement.querySelector('.playground_cat_value').textContent = tag;
           modalFields.tagsWrapper.appendChild(tagElement);
         });
       } else {
