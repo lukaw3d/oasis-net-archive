@@ -6,6 +6,20 @@ import rehypeSanitize from 'https://esm.sh/rehype-sanitize@6?bundle';
 import rehypeStringify from 'https://esm.sh/rehype-stringify@10?bundle';
 import rehypeExternalLinks from 'https://esm.sh/rehype-external-links@3?bundle';
 
+/** Blocks dangerous URLs that start with "javascript:". */
+function sanitizeUrl(url) {
+  try {
+    if (new URL(url).protocol !== 'https:') {
+      console.error('sanitizeUrl blocked unsafe URL:', url);
+      return undefined;
+    }
+  } catch (err) {
+    console.error('sanitizeUrl blocked broken URL:', url);
+    return undefined;
+  }
+  return url;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const apiUrl = "https://playground.oasis.io/projects.json";
   const itemsPerPage = 6;
@@ -513,7 +527,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const a = document.createElement('a');
             a.target = '_blank';
             a.className = 'author-link';
-            a.href = authorUrl;
+            a.href = sanitizeUrl(authorUrl);
             a.textContent = authorName;
             return i > 0 ? [', ', a] : [a];
           })
@@ -522,7 +536,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // GitHub Link: Check if project.github exists
       if (project.codeUrl) {
-        modalFields.github.href = project.codeUrl; // Set the GitHub URL
+        modalFields.github.href = sanitizeUrl(project.codeUrl); // Set the GitHub URL
         modalFields.github.textContent = "Link to GitHub"; // Set the link text
         modalFields.github.setAttribute("target", "_blank"); // Ensure it opens in a new tab
         modalFields.github.style.display = "inline"; // Show the GitHub link if available
@@ -532,7 +546,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Demo Link: Check if project.demoUrl exists
       if (project.demoUrl) {
-        modalFields.demo.href = project.demoUrl; // Set the demo URL
+        modalFields.demo.href = sanitizeUrl(project.demoUrl); // Set the demo URL
         modalFields.demo.textContent = "View Demo"; // Set the demo link text
         modalFields.demo.setAttribute("target", "_blank"); // Ensure it opens in a new tab
         modalFields.demo.style.display = "inline"; // Show the demo link if available
@@ -543,7 +557,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (modalFields.tutorial) {
         modalFields.tutorial.href =
           project.tutorials && project.tutorials[0]
-            ? project.tutorials[0][Object.keys(project.tutorials[0])[0]]
+            ? sanitizeUrl(Object.values(project.tutorials[0])[0])
             : "#";
         modalFields.tutorial.textContent =
           project.tutorials && project.tutorials[0] ? "Video Demo" : "N/A";
