@@ -558,17 +558,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.querySelector(".playground_modal_demo").style.display = "none";
       }
 
-      if (modalFields.tutorial) {
-        modalFields.tutorial.href =
-          project.tutorials && project.tutorials[0]
-            ? sanitizeUrl(Object.values(project.tutorials[0])[0])
-            : "#";
-        modalFields.tutorial.textContent =
-          project.tutorials && project.tutorials[0] ? "Video Demo" : "N/A";
+      if (project.tutorials?.length > 0) {
+        modalFields.tutorial.href = sanitizeUrl(Object.values(project.tutorials[0])[0]);
+        modalFields.tutorial.textContent = Object.keys(project.tutorials[0])[0];
         modalFields.tutorial.setAttribute("target", "_blank");
       } else {
-        // TODO: ???
-        modalFields.tutorial.style.display = "none";
+        modalFields.tutorial.removeAttribute("href");
+        modalFields.tutorial.textContent = "N/A";
       }
 
       modalFields.license.textContent = project.license || "Unspecified";
