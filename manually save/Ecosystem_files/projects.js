@@ -61,17 +61,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     checkUrlAndOpenModal();
 
     function markdownToHtml(description) {
-      // TODO: headings: decrease size + .modal-text-heading
-      // TODO: paragraphs: decrease size
       const html = String(
         unified()
           .use(remarkParse)
           .use(remarkRehype)
           .use(rehypeSanitize)
-          .use(rehypeExternalLinks, {
-            target: "_blank",
-            properties: { class: "description-link" },
-          })
+          .use(rehypeExternalLinks, { target: "_blank" })
           .use(rehypeStringify)
           .processSync(description)
       );
