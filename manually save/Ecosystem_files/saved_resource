@@ -1,0 +1,110 @@
+var isDebugMode = false;
+function log(...messages) {
+  if (isDebugMode) {
+    console.log(JSON.stringify(messages));
+  }
+}
+
+(function () {
+  // Function to load a script
+
+  function loadScript(url, callback) {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script["data-token"] = dataToken;
+
+    if (script.readyState) {
+      // only required for IE <9
+      script.onreadystatechange = function () {
+        if (script.readyState == "loaded" || script.readyState == "complete") {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else {
+      //Others
+      script.onload = function () {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  }
+
+  // Get the version from the script tag
+  var myScript = document.getElementById("MavaWebChat");
+  var version = myScript.getAttribute("widget-version");
+  var source = myScript.getAttribute("src");
+  var enableSDK = myScript.getAttribute("enable-sdk");
+  var dataToken = myScript.getAttribute("data-token");
+  var delayLoad = myScript.getAttribute("delay-load");
+  var debugSetting = myScript.getAttribute("debug-mode");
+  if (debugSetting) {
+    isDebugMode = debugSetting !== "false" ? true : false;
+  } else {
+    isDebugMode = false;
+  }
+  var script = document.createElement("script");
+  script.type = "text/javascript";
+  script.text = `
+  var isDebugMode = ${isDebugMode};
+  var log = ${log.toString()};
+  `;
+  log("Debug mode: " + isDebugMode);
+  log("Initializing widget loader");
+  var isLocal = false;
+  var origin;
+  try {
+    origin = new URL(source).origin;
+  } catch (e) {
+    log(e);
+    log("Local widget");
+    isLocal = true;
+  }
+  log("Widget version: ", version, " Origin: ", origin, " Local: ", isLocal);
+  // Load the appropriate version of the widget
+
+  if (isLocal) {
+    loadScript(`../${version}/index.ts`, function () {
+      log("Widget version " + version + " loaded");
+    });
+    return;
+  }
+  if (enableSDK && enableSDK === "true") {
+    log("Loading SDK");
+    loadScript(
+      `${origin || "https://widget.koia.dev"}/sdk.js`,
+      function () {
+        log("SDK loaded");
+      },
+      dataToken
+    );
+  }
+  var newEvent = new Event("loadMavaWebchat");
+  if (isLocal) {
+    loadScript("../src/index.ts", function () {
+      log("Widget local version " + version + " loaded");
+      if (delayLoad !== "true") {
+        log("Dispatching loadMavaWebChat event");
+        window.dispatchEvent(newEvent);
+      }
+    });
+    return;
+  }
+  if (version) {
+    log("Loading version " + version);
+    loadScript(`${origin}/${version}.js`, function () {
+      log("Widget version " + version + " loaded");
+      if (delayLoad !== "true") {
+        log("Dispatching loadMavaWebChat event");
+        window.dispatchEvent(newEvent);
+      }
+    });
+  } else {
+    // Load the default version if the specified version is not found
+    loadScript(`${origin}/v1.js`, function () {
+      log("Default widget version loaded");
+    });
+  }
+})();
